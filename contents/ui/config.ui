@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>ConfigUI</class>
+    <widget class="QWidget" name="ConfigUI">
+        <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+                <widget class="QLabel" name="labelOSD">
+                    <property name="text">
+                        <string>Toggle OSD:</string>
+                    </property>
+                    <property name="buddy">
+                        <cstring>kcfg_ShowToggleOSD</cstring>
+                    </property>
+                </widget>
+            </item>
+            <item row="0" column="1">
+                <!-- Binds to KConfigXT entry "ShowToggleOSD" -->
+                <widget class="QCheckBox" name="kcfg_ShowToggleOSD">
+                    <property name="text">
+                        <string>Show “EdgeDrag: switch on edge on/off” on toggle</string>
+                    </property>
+                    <property name="checked"><bool>true</bool></property>
+                </widget>
+            </item>
+
+            <!-- Shortcut instructions -->
+            <item row="1" column="0" colspan="2">
+                <widget class="QLabel" name="labelShortcutInfo">
+                    <property name="wordWrap"><bool>true</bool></property>
+                    <property name="text">
+                        <string>The shortcut to toggle "switch on edge" can be changed from System Settings → Shortcuts → “EdgeDrag: Switch on edge (toggle)". The default is Meta+Alt+D</string>
+                    </property>
+                </widget>
+            </item>
+
+            <!-- Screen edges / barrier / delays instructions -->
+            <item row="2" column="0" colspan="2">
+                <widget class="QLabel" name="labelEdgesInfo">
+                    <property name="wordWrap"><bool>true</bool></property>
+                    <property name="text">
+                        <string>Active edges, Edge barrier, Activation delay, and Reactivation delay can be changed from System Settings → Screen Edges. If no edge is set, all edges are active by default.</string>
+                    </property>
+                </widget>
+            </item>
+        </layout>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>

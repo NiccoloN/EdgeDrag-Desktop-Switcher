@@ -1,0 +1,20 @@
+{
+  "KPlugin": {
+    "Id": "edgedrag-desktop-switcher",
+    "Name": "EdgeDrag Desktop Switcher",
+    "Authors": [
+      { "Name": "NiccoloN", "Email": "niccolo.nicolosi@gmail.com" }
+    ],
+    "Description": "Switch desktops by dragging files to screen edges",
+    "Category": "Window Management",
+    "Icon": "preferences-system-windows",
+    "Version": "1.0",
+    "License": "GPL",
+    "EnabledByDefault": true
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+  "X-KWin-Border-Activate": true,
+  "KPackageStructure": "KWin/Script"
+}
