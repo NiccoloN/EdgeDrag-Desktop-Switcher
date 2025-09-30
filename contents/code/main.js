@@ -5,7 +5,7 @@
  * - Switch desktops when the cursor hits a configured screen edge WHILE a drag is active.
  * - Drag sources: window interactive move/resize, compositor DnD icon (files/text), or “switch on edge” hotkey.
  * - Edge activation/reactivation delays come from Screen Edges settings.
- * - Edges are assigned via X-KWin-Border-Activate (Screen Edges KCM).
+ * - Edges are assigned via Screen Edges KCM -> kwinrc [Script-edgedrag-desktop-switcher] BorderActivate=...
  * - Hotkey is a KWin global shortcut (change in System Settings → Shortcuts → KWin).
  */
 
@@ -13,42 +13,54 @@ const SCRIPT = "edgedrag-desktop-switcher";
 function log(m) { print("[" + SCRIPT + "] " + m); }
 
 // ---- setting (single) ----
-let showToggleOSD = readConfig("ShowToggleOSD", true);
+let showToggleOSD = readConfig("ShowToggleOSD", true); // from [Script-...][General]/ShowToggleOSD
 
-// ---- edges: state + helpers (declare BEFORE using anywhere) ----
+// ---- edges: state + helpers ----
 let registeredEdges = [];
 
 function readPickedEdges() {
     try {
-        const arr = readConfig("BorderConfig", []);
-        if (arr && typeof arr.length === "number") return Array.prototype.slice.call(arr);
-    } catch (_) {}
-    return [];
+        const raw = readConfig("BorderActivate", "");
+        // raw may be a string ("2,6"), an array-like, or empty
+        if (typeof raw === "string") {
+            const m = raw.match(/\d+/g);
+            return m ? m.map((s) => Number(s)).filter((n) => !isNaN(n)) : [];
+        }
+        if (raw && typeof raw.length === "number") {
+            return Array.prototype.slice.call(raw).map(Number).filter((n) => !isNaN(n));
+        }
+        const n = Number(raw);
+        return isNaN(n) ? [] : [n];
+    } catch (_) {
+        return [];
+    }
 }
+
 function arraysEqual(a, b) {
     if (a === b) return true;
     if (!a || !b || a.length !== b.length) return false;
     for (let i = 0; i < a.length; ++i) if (a[i] !== b[i]) return false;
     return true;
 }
+
 function unregisterAllEdges() {
     if (typeof unregisterScreenEdge === "function") {
         registeredEdges.forEach((e) => unregisterScreenEdge(e));
     }
     registeredEdges = [];
 }
+
 function registerEdges(edges) {
     unregisterAllEdges();
-    if (!edges || !edges.length) {
-        edges = [
-            KWin.ElectricLeft, KWin.ElectricRight, KWin.ElectricTop, KWin.ElectricBottom,
-            KWin.ElectricTopLeft, KWin.ElectricTopRight, KWin.ElectricBottomLeft, KWin.ElectricBottomRight
-        ];
-    }
+
+    if (!edges || !edges.length) { log("edges: none (assign in Screen Edges)"); return; }
+
+    const ok = [];
     edges.forEach((e) => {
-        const ok = registerScreenEdge(e, () => onEdge(e));
-        if (ok) registeredEdges.push(e);
+        try { if (registerScreenEdge(e, () => onEdge(e))) ok.push(e); } catch (_) {}
     });
+    registeredEdges = ok;
+    log("edges: " + (ok.length ? ok.join(",") : "none"));
 }
 
 // ---- react to KCM Apply (our checkbox + Screen Edges) ----
@@ -77,7 +89,7 @@ function showOSD(text) {
 // ---- drag state ----
 let draggingWindow = false;
 let draggingDnd    = false;
-let switchOnEdge   = false;  // renamed from “manual drag”
+let switchOnEdge   = false;
 
 const dndWindows = new Set();
 function isDragging() { return draggingWindow || draggingDnd || switchOnEdge; }
@@ -118,7 +130,8 @@ if (typeof registerShortcut === "function") {
         onTogglePulse
     );
 }
-const QUIET_GAP_MS = 300; // ignore auto-repeat; OFF only if next press after this gap
+
+const QUIET_GAP_MS = 300;
 let lastPulse = 0;
 
 function onTogglePulse() {
@@ -146,10 +159,10 @@ workspace.cursorPosChanged?.connect?.(() => {
 });
 function dirForEdge(edge) {
     switch (edge) {
-        case KWin.ElectricLeft:   return "left";
-        case KWin.ElectricRight:  return "right";
-        case KWin.ElectricTop:    return "up";
-        case KWin.ElectricBottom: return "down";
+        case KWin.ElectricLeft:        return "left";
+        case KWin.ElectricRight:       return "right";
+        case KWin.ElectricTop:         return "up";
+        case KWin.ElectricBottom:      return "down";
         case KWin.ElectricTopLeft:     return Math.abs(lastDelta.dx) >= Math.abs(lastDelta.dy) ? "left"  : "up";
         case KWin.ElectricBottomLeft:  return Math.abs(lastDelta.dx) >= Math.abs(lastDelta.dy) ? "left"  : "down";
         case KWin.ElectricTopRight:    return Math.abs(lastDelta.dx) >= Math.abs(lastDelta.dy) ? "right" : "up";
